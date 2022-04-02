@@ -1273,8 +1273,10 @@ class RazerBook2020(_RippleKeyboard):
     USB_VID = 0x1532
     USB_PID = 0x026A
     METHODS = ['get_device_type_keyboard', 'set_static_effect', 'set_spectrum_effect',
-               'set_none_effect', 'set_breath_random_effect', 'set_breath_single_effect']
-
+               'set_none_effect', 'set_breath_random_effect', 'set_breath_single_effect', 'set_breath_dual_effect',
+               'set_reactive_effect',
+               'set_wave_effect', 'set_starlight_random_effect', 'set_starlight_single_effect', 'set_starlight_dual_effect', 'set_ripple_effect', 'set_ripple_effect_random_colour'
+               ]
     DEVICE_IMAGE = "https://assets.razerzone.com/eeimages/support/products/1743/razerbook132020.png"
 
 
