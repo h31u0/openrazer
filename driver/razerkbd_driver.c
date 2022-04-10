@@ -2422,6 +2422,7 @@ static ssize_t razer_attr_write_matrix_custom_frame(struct device *dev, struct d
         case USB_DEVICE_ID_RAZER_BLADE_PRO_LATE_2019:
         case USB_DEVICE_ID_RAZER_BLADE_PRO_EARLY_2020:
         case USB_DEVICE_ID_RAZER_BLADE_15_ADV_2020:
+        case USB_DEVICE_ID_RAZER_BOOK_2020;
         case USB_DEVICE_ID_RAZER_BLADE_15_ADV_MID_2021:
         case USB_DEVICE_ID_RAZER_BLADE_17_PRO_MID_2021:
         case USB_DEVICE_ID_RAZER_BLADE_15_ADV_EARLY_2021:
@@ -3067,6 +3068,8 @@ static int razer_kbd_probe(struct hid_device *hdev, const struct hid_device_id *
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_fn_toggle);                     // Sets whether FN is requires for F-Keys
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_matrix_custom_frame);           // Set LED matrix
             CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_matrix_effect_custom);          // Custom effect
+            CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_matrix_custom_frame);           // Set LED matrix
+            CREATE_DEVICE_FILE(&hdev->dev, &dev_attr_game_led_state);                // Enable game mode & LED
             break;
 
         case USB_DEVICE_ID_RAZER_BLACKWIDOW_ULTIMATE_2016:
@@ -3453,6 +3456,8 @@ static void razer_kbd_disconnect(struct hid_device *hdev)
             device_remove_file(&hdev->dev, &dev_attr_fn_toggle);                     // Sets whether FN is requires for F-Keys
             device_remove_file(&hdev->dev, &dev_attr_matrix_custom_frame);           // Set LED matrix
             device_remove_file(&hdev->dev, &dev_attr_matrix_effect_custom);          // Custom effect
+            device_remove_file(&hdev->dev, &dev_attr_matrix_custom_frame);           // Set LED matrix
+            device_remove_file(&hdev->dev, &dev_attr_game_led_state);                // Enable game mode & LED
             break;
 
         case USB_DEVICE_ID_RAZER_BLACKWIDOW_ULTIMATE_2016:
