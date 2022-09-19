@@ -1,8 +1,11 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 import json
 import dbus as _dbus
 from openrazer.client.fx import RazerFX as _RazerFX
 from xml.etree import ElementTree as _ET
 from openrazer.client.macro import RazerMacro as _RazerMacro
+from openrazer.client import constants as _c
 
 
 class RazerDevice(object):
@@ -60,6 +63,7 @@ class RazerDevice(object):
             'macro_logic': self._has_feature('razer.device.macro'),
             'keyboard_layout': self._has_feature('razer.device.misc', 'getKeyboardLayout'),
             'game_mode_led': self._has_feature('razer.device.led.gamemode'),
+            'keyswitch_optimization': self._has_feature('razer.device.misc.keyswitchoptimization', ('getKeyswitchOptimization', 'setKeyswitchOptimization')),
             'macro_mode_led': self._has_feature('razer.device.led.macromode', 'setMacroMode'),
             'macro_mode_led_effect': self._has_feature('razer.device.led.macromode', 'setMacroEffect'),
             'macro_mode_modifier': self._has_feature('razer.device.macro', 'setModeModifier'),
@@ -69,6 +73,9 @@ class RazerDevice(object):
             'dpi': self._has_feature('razer.device.dpi', ('getDPI', 'setDPI')),
             'dpi_stages': self._has_feature('razer.device.dpi', ('getDPIStages', 'setDPIStages')),
             'available_dpi': self._has_feature('razer.device.dpi', 'availableDPI'),
+            'scroll_mode': self._has_feature('razer.device.scroll', ('getScrollMode', 'setScrollMode')),
+            'scroll_acceleration': self._has_feature('razer.device.scroll', ('getScrollAcceleration', 'setScrollAcceleration')),
+            'scroll_smart_reel': self._has_feature('razer.device.scroll', ('getScrollSmartReel', 'setScrollSmartReel')),
 
             # Default device is a chroma so lighting capabilities
             'lighting': self._has_feature('razer.device.lighting.chroma'),
@@ -220,10 +227,14 @@ class RazerDevice(object):
             self._dbus_interfaces['power'] = _dbus.Interface(self._dbus, "razer.device.power")
         if self.has('game_mode_led'):
             self._dbus_interfaces['game_mode_led'] = _dbus.Interface(self._dbus, "razer.device.led.gamemode")
+        if self.has('keyswitch_optimization'):
+            self._dbus_interfaces['keyswitch_optimization'] = _dbus.Interface(self._dbus, "razer.device.misc.keyswitchoptimization")
         if self.has('macro_mode_led'):
             self._dbus_interfaces['macro_mode_led'] = _dbus.Interface(self._dbus, "razer.device.led.macromode")
         if self.has('lighting_profile_led_red') or self.has('lighting_profile_led_green') or self.has('lighting_profile_led_blue'):
             self._dbus_interfaces['profile_led'] = _dbus.Interface(self._dbus, "razer.device.lighting.profile_led")
+        if self.has('scroll_mode') or self.has('scroll_acceleration') or self.has('scroll_smart_reel'):
+            self._dbus_interfaces['scroll'] = _dbus.Interface(self._dbus, "razer.device.scroll")
 
     def _get_available_features(self):
         introspect_interface = _dbus.Interface(self._dbus, 'org.freedesktop.DBus.Introspectable')
@@ -476,6 +487,59 @@ class RazerDevice(object):
         """
         if self.has('battery'):
             return int(self._dbus_interfaces['power'].getLowBatteryThreshold())
+
+    @property
+    def poll_rate(self) -> int:
+        """
+        Get poll rate from device
+
+        :return: Poll rate
+        :rtype: int
+
+        :raises NotImplementedError: If function is not supported
+        """
+        if self.has('poll_rate'):
+            return int(self._dbus_interfaces['device'].getPollRate())
+        else:
+            raise NotImplementedError()
+
+    @poll_rate.setter
+    def poll_rate(self, poll_rate: int):
+        """
+        Set poll rate of device
+
+        :param poll_rate: Polling rate
+        :type poll_rate: int
+
+        :raises NotImplementedError: If function is not supported
+        """
+        if self.has('poll_rate'):
+            if not isinstance(poll_rate, int):
+                raise ValueError("Poll rate is not an integer: {0}".format(poll_rate))
+            if poll_rate not in (_c.POLL_125HZ, _c.POLL_500HZ, _c.POLL_1000HZ, _c.POLL_2000HZ, _c.POLL_4000HZ, _c.POLL_8000HZ):
+                raise ValueError('Poll rate "{0}" is not one of {1}'.format(poll_rate, (_c.POLL_125HZ, _c.POLL_500HZ, _c.POLL_1000HZ, _c.POLL_2000HZ, _c.POLL_4000HZ, _c.POLL_8000HZ)))
+
+            self._dbus_interfaces['device'].setPollRate(poll_rate)
+
+        else:
+            raise NotImplementedError()
+
+    @property
+    def supported_poll_rates(self) -> list:
+        """
+        Get poll rates supported by the device
+
+        :return: Supported poll rates
+        :rtype: list
+
+        :raises NotImplementedError: If function is not supported
+        """
+        if self.has('supported_poll_rates'):
+            dbuslist = self._dbus_interfaces['device'].getSupportedPollRates()
+            # Repack list from dbus ints to normal ints
+            return [int(d) for d in dbuslist]
+        else:
+            raise NotImplementedError()
 
     def __str__(self):
         return self._name

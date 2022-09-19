@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 """
 Hardware base class
 """
@@ -73,6 +75,8 @@ class RazerDevice(DBusService):
             self.storage_name = "Orochi2011"
         elif self.USB_PID == 0x0016:
             self.storage_name = "DeathAdder35G"
+        elif self.USB_PID == 0x0029:
+            self.storage_name = "DeathAdder35GBlack"
         elif self.USB_PID == 0x0024 or self.USB_PID == 0x0025:
             self.storage_name = "Mamba2012"
         else:
@@ -91,7 +95,12 @@ class RazerDevice(DBusService):
                 "wave_dir": 1,
             }
 
-        self.dpi = [1800, 1800]
+        # Check for a DPI X only device since they need a Y value of 0
+        if 'available_dpi' in self.METHODS:
+            self.dpi = [1800, 0]
+        else:
+            self.dpi = [1800, 1800]
+
         self.poll_rate = 500
 
         self._effect_sync = effect_sync.EffectSync(self, device_number)
@@ -209,7 +218,7 @@ class RazerDevice(DBusService):
                 self.add_dbus_method(m[0], m[1], m[2], in_signature=m[3], out_signature=m[4])
 
         for i in self.ZONES[1:]:
-            if 'set_' + i + '_static' in self.METHODS or 'set_' + i + '_static_naga_hex_v2' in self.METHODS or '`set_' + i + 'active' in self.METHODS:
+            if 'set_' + i + '_static' in self.METHODS or 'set_' + i + '_static_naga_hex_v2' in self.METHODS or 'set_' + i + '_active' in self.METHODS:
                 self.zone[i]["present"] = True
                 for m in effect_methods[i]:
                     self.logger.debug("Adding {}.{} method to DBus".format(m[0], m[1]))
@@ -884,7 +893,7 @@ class RazerDevice(DBusService):
         :rtype: str
         """
         device_mode_path = os.path.join(self._device_path, 'device_mode')
-        with open(device_mode_path, 'r') as mode_file:
+        with open(device_mode_path, 'rb') as mode_file:
             count = 0
             mode = mode_file.read().strip()
             while len(mode) == 0:
@@ -895,7 +904,7 @@ class RazerDevice(DBusService):
                 count += 1
                 time.sleep(0.1)
 
-            return mode
+            return "{0}:{1}".format(mode[0], mode[1])
 
     def set_device_mode(self, mode_id, param):
         """

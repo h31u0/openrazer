@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 import math
 import struct
 from openrazer_daemon.dbus_services import endpoint
@@ -217,6 +219,11 @@ def get_dpi_xy(self):
     except FileNotFoundError:
         return self.dpi
 
+    if 'available_dpi' in self.METHODS:
+        if len(dpi) != 1:
+            raise RuntimeError("Devices with available_dpi are expected to have only one DPI value returned from driver, got " + str(dpi))
+        dpi = dpi[0], 0
+
     return dpi
 
 
@@ -292,7 +299,7 @@ def available_dpi(self):
 @endpoint('razer.device.misc', 'setPollRate', in_sig='q')
 def set_poll_rate(self, rate):
     """
-    Set the DPI on the mouse, Takes in 4 bytes big-endian
+    Set the polling rate on the device, Takes in 4 bytes big-endian
 
     :param rate: Poll rate
     :type rate: int
